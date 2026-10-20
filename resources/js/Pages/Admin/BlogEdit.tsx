@@ -1,6 +1,6 @@
 import { router } from '@inertiajs/react';
 import Placeholder from '@tiptap/extension-placeholder';
-import { EditorContent, useEditor } from '@tiptap/react';
+import { EditorContent, useEditor, useEditorState } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import { useRef, useState } from 'react';
 import { Markdown } from 'tiptap-markdown';
@@ -75,20 +75,27 @@ export default function BlogEdit({ post }: { post: Post }) {
         content: post.markdown ?? '',
         editorProps: {
             attributes: {
-                style: [
-                    'min-height:400px',
-                    'padding:14px 16px',
-                    'background:#0f1623',
-                    'border:1px solid rgba(255,255,255,0.1)',
-                    'border-top:none',
-                    'border-radius:0 0 8px 8px',
-                    'color:#f8fafc',
-                    'font-size:15px',
-                    'line-height:1.7',
-                    'outline:none',
-                ].join(';'),
+                class: 'prose prose-invert max-w-none focus:outline-none',
+                style: 'min-height:400px;padding:14px 16px;background:#0f1623;border:1px solid rgba(255,255,255,0.1);border-top:none;border-radius:0 0 8px 8px;',
             },
         },
+    });
+
+    const active = useEditorState({
+        editor,
+        selector: (ctx) => ({
+            bold:        ctx.editor?.isActive('bold') ?? false,
+            italic:      ctx.editor?.isActive('italic') ?? false,
+            strike:      ctx.editor?.isActive('strike') ?? false,
+            code:        ctx.editor?.isActive('code') ?? false,
+            h1:          ctx.editor?.isActive('heading', { level: 1 }) ?? false,
+            h2:          ctx.editor?.isActive('heading', { level: 2 }) ?? false,
+            h3:          ctx.editor?.isActive('heading', { level: 3 }) ?? false,
+            bulletList:  ctx.editor?.isActive('bulletList') ?? false,
+            orderedList: ctx.editor?.isActive('orderedList') ?? false,
+            blockquote:  ctx.editor?.isActive('blockquote') ?? false,
+            codeBlock:   ctx.editor?.isActive('codeBlock') ?? false,
+        }),
     });
 
     function handleTitleChange(val: string) {
@@ -183,19 +190,19 @@ export default function BlogEdit({ post }: { post: Post }) {
                         {editor && (
                             <div style={{ border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8 }}>
                                 <div style={{ display: 'flex', gap: 4, padding: '8px 10px', borderBottom: '1px solid rgba(255,255,255,0.07)', flexWrap: 'wrap' }}>
-                                    <button type="button" style={toolbarBtnStyle(editor.isActive('bold'))} onClick={() => editor.chain().focus().toggleBold().run()}>B</button>
-                                    <button type="button" style={toolbarBtnStyle(editor.isActive('italic'))} onClick={() => editor.chain().focus().toggleItalic().run()}>I</button>
-                                    <button type="button" style={toolbarBtnStyle(editor.isActive('strike'))} onClick={() => editor.chain().focus().toggleStrike().run()}>S</button>
-                                    <button type="button" style={toolbarBtnStyle(editor.isActive('code'))} onClick={() => editor.chain().focus().toggleCode().run()}>{'<>'}</button>
+                                    <button type="button" style={toolbarBtnStyle(active?.bold ?? false)} onClick={() => editor.chain().focus().toggleBold().run()}>B</button>
+                                    <button type="button" style={toolbarBtnStyle(active?.italic ?? false)} onClick={() => editor.chain().focus().toggleItalic().run()}>I</button>
+                                    <button type="button" style={toolbarBtnStyle(active?.strike ?? false)} onClick={() => editor.chain().focus().toggleStrike().run()}>S</button>
+                                    <button type="button" style={toolbarBtnStyle(active?.code ?? false)} onClick={() => editor.chain().focus().toggleCode().run()}>{'<>'}</button>
                                     <span style={{ width: 1, background: 'rgba(255,255,255,0.1)', margin: '2px 4px' }} />
-                                    <button type="button" style={toolbarBtnStyle(editor.isActive('heading', { level: 1 }))} onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}>H1</button>
-                                    <button type="button" style={toolbarBtnStyle(editor.isActive('heading', { level: 2 }))} onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}>H2</button>
-                                    <button type="button" style={toolbarBtnStyle(editor.isActive('heading', { level: 3 }))} onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}>H3</button>
+                                    <button type="button" style={toolbarBtnStyle(active?.h1 ?? false)} onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}>H1</button>
+                                    <button type="button" style={toolbarBtnStyle(active?.h2 ?? false)} onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}>H2</button>
+                                    <button type="button" style={toolbarBtnStyle(active?.h3 ?? false)} onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}>H3</button>
                                     <span style={{ width: 1, background: 'rgba(255,255,255,0.1)', margin: '2px 4px' }} />
-                                    <button type="button" style={toolbarBtnStyle(editor.isActive('bulletList'))} onClick={() => editor.chain().focus().toggleBulletList().run()}>• List</button>
-                                    <button type="button" style={toolbarBtnStyle(editor.isActive('orderedList'))} onClick={() => editor.chain().focus().toggleOrderedList().run()}>1. List</button>
-                                    <button type="button" style={toolbarBtnStyle(editor.isActive('blockquote'))} onClick={() => editor.chain().focus().toggleBlockquote().run()}>"</button>
-                                    <button type="button" style={toolbarBtnStyle(editor.isActive('codeBlock'))} onClick={() => editor.chain().focus().toggleCodeBlock().run()}>```</button>
+                                    <button type="button" style={toolbarBtnStyle(active?.bulletList ?? false)} onClick={() => editor.chain().focus().toggleBulletList().run()}>• List</button>
+                                    <button type="button" style={toolbarBtnStyle(active?.orderedList ?? false)} onClick={() => editor.chain().focus().toggleOrderedList().run()}>1. List</button>
+                                    <button type="button" style={toolbarBtnStyle(active?.blockquote ?? false)} onClick={() => editor.chain().focus().toggleBlockquote().run()}>"</button>
+                                    <button type="button" style={toolbarBtnStyle(active?.codeBlock ?? false)} onClick={() => editor.chain().focus().toggleCodeBlock().run()}>```</button>
                                     <span style={{ width: 1, background: 'rgba(255,255,255,0.1)', margin: '2px 4px' }} />
                                     <button type="button" style={toolbarBtnStyle(false)} onClick={() => editor.chain().focus().undo().run()}>↩</button>
                                     <button type="button" style={toolbarBtnStyle(false)} onClick={() => editor.chain().focus().redo().run()}>↪</button>

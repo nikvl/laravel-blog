@@ -7,7 +7,7 @@
         "php": "^8.2",
         "laravel/framework": "^11|^12",
         "league/commonmark": "^2",
-        "inertiajs/inertia-laravel": "^2"
+        "inertiajs/inertia-laravel": "^2|^3"
     },
     "suggest": {
         "spatie/laravel-tags": "Required when config('blog.tags') = 'spatie-tags'",

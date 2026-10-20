@@ -9,4 +9,9 @@ use Spatie\Tags\Tag;
 class BlogTag extends Tag
 {
     protected $table = 'blog_tags';
+
+    public function getForeignKey(): string
+    {
+        return 'tag_id';
+    }
 }

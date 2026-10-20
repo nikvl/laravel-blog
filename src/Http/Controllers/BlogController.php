@@ -16,6 +16,7 @@ class BlogController extends Controller
         $posts = BlogPost::published()
             ->orderByDesc('published_at')
             ->select(['slug', 'title', 'excerpt', 'cover_image', 'author', 'published_at'])
+            ->when(config('blog.tags') === 'spatie-tags', fn ($q) => $q->with('tags'))
             ->paginate(12);
 
         return Inertia::render('Blog/Index', ['posts' => $posts]);
@@ -23,10 +24,45 @@ class BlogController extends Controller
 
     public function show(string $slug): Response
     {
-        $post = BlogPost::published()
-            ->where('slug', $slug)
-            ->firstOrFail(['slug', 'title', 'excerpt', 'body', 'author', 'cover_image', 'published_at']);
+        $query = BlogPost::published()->where('slug', $slug);
 
-        return Inertia::render('Blog/Show', ['post' => $post]);
+        if (config('blog.tags') === 'spatie-tags') {
+            $query->with('tags');
+        }
+
+        if (config('blog.comments') === 'beyondcode') {
+            $query->with(['comments' => fn ($q) => $q->where('is_approved', true)->latest()]);
+        }
+
+        $post = $query->firstOrFail();
+
+        $seo = null;
+        if (config('blog.seo') === 'artesaos') {
+            app('seo')->setTitle($post->title);
+            app('seo')->setDescription($post->excerpt ?? '');
+            app('seo')->opengraph()->setUrl(request()->url());
+            app('seo')->opengraph()->setTitle($post->title);
+            if ($post->cover_image) {
+                app('seo')->opengraph()->addImage($post->cover_image);
+                app('seo')->twitter()->addImage($post->cover_image);
+            }
+
+            if (! config('blog.seo_ssr')) {
+                $seo = [
+                    'title'       => $post->title,
+                    'description' => $post->excerpt,
+                    'og_image'    => $post->cover_image,
+                    'url'         => request()->url(),
+                ];
+            }
+        }
+
+        return Inertia::render('Blog/Show', [
+            'post'                 => $post,
+            'seo'                  => $seo,
+            'commentsEnabled'      => config('blog.comments') === 'beyondcode',
+            'commentsRequireAuth'  => config('blog.comments_require_auth'),
+            'commentsModerationOn' => config('blog.comments_moderation'),
+        ]);
     }
 }

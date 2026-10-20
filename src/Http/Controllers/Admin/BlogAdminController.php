@@ -34,17 +34,32 @@ class BlogAdminController extends Controller
 
     public function create(): Response
     {
-        return Inertia::render('Admin/BlogEdit', ['post' => [
-            'id' => null, 'slug' => '', 'title' => '', 'excerpt' => null,
-            'markdown' => null, 'author' => null, 'cover_image' => null, 'published_at' => null,
-        ]]);
+        return Inertia::render('Admin/BlogEdit', [
+            'post' => [
+                'id' => null, 'slug' => '', 'title' => '', 'excerpt' => null,
+                'markdown' => null, 'author' => null, 'cover_image' => null, 'published_at' => null,
+                'tags' => [],
+            ],
+            'tagsEnabled' => config('blog.tags') === 'spatie-tags',
+        ]);
     }
 
     public function edit(int $id): Response
     {
-        $post = BlogPost::findOrFail($id, ['id', 'slug', 'title', 'excerpt', 'markdown', 'author', 'cover_image', 'published_at']);
+        $post = BlogPost::when(
+            config('blog.tags') === 'spatie-tags',
+            fn ($q) => $q->with('tags')
+        )->findOrFail($id);
 
-        return Inertia::render('Admin/BlogEdit', ['post' => $post]);
+        $data = $post->only(['id', 'slug', 'title', 'excerpt', 'markdown', 'author', 'cover_image', 'published_at']);
+        $data['tags'] = config('blog.tags') === 'spatie-tags'
+            ? $post->tags->pluck('name')->toArray()
+            : [];
+
+        return Inertia::render('Admin/BlogEdit', [
+            'post'        => $data,
+            'tagsEnabled' => config('blog.tags') === 'spatie-tags',
+        ]);
     }
 
     public function store(Request $request): RedirectResponse
@@ -56,12 +71,13 @@ class BlogAdminController extends Controller
             'markdown' => 'required|string',
             'author'   => 'nullable|string|max:255',
             'cover'    => 'nullable|image|max:4096',
+            'tags'     => 'nullable|string',
         ]);
 
         $slug = $data['slug'] ?? Str::slug($data['title']);
         $body = (new CommonMarkConverter)->convert($data['markdown'])->getContent();
 
-        BlogPost::create([
+        $post = BlogPost::create([
             'slug'        => $slug,
             'title'       => $data['title'],
             'excerpt'     => $data['excerpt'] ?? null,
@@ -70,6 +86,10 @@ class BlogAdminController extends Controller
             'author'      => $data['author'] ?? null,
             'cover_image' => $this->storeCover($request),
         ]);
+
+        if (config('blog.tags') === 'spatie-tags' && ! empty($data['tags'])) {
+            $post->syncTags($this->parseTags($data['tags']));
+        }
 
         return redirect()->route('admin.blog')->with('status', 'Статья создана');
     }
@@ -85,6 +105,7 @@ class BlogAdminController extends Controller
             'markdown' => 'required|string',
             'author'   => 'nullable|string|max:255',
             'cover'    => 'nullable|image|max:4096',
+            'tags'     => 'nullable|string',
         ]);
 
         $body = (new CommonMarkConverter)->convert($data['markdown'])->getContent();
@@ -98,6 +119,10 @@ class BlogAdminController extends Controller
             'author'      => $data['author'] ?? null,
             'cover_image' => $this->storeCover($request) ?? $post->cover_image,
         ]);
+
+        if (config('blog.tags') === 'spatie-tags') {
+            $post->syncTags($this->parseTags($data['tags'] ?? ''));
+        }
 
         return back()->with('status', 'Сохранено');
     }
@@ -121,6 +146,16 @@ class BlogAdminController extends Controller
         BlogPost::findOrFail($id)->delete();
 
         return redirect()->route('admin.blog')->with('status', 'Статья удалена');
+    }
+
+    /** @return array<string> */
+    private function parseTags(?string $raw): array
+    {
+        if (! $raw) {
+            return [];
+        }
+
+        return array_values(array_filter(array_map('trim', explode(',', $raw))));
     }
 
     private function storeCover(Request $request): ?string

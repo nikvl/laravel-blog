@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace Nikv\Blog\Models;
 
+use BeyondCode\Comments\Traits\HasComments;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Carbon;
+use Spatie\Tags\HasTags;
 
 /**
  * @property int $id
@@ -23,6 +25,8 @@ use Illuminate\Support\Carbon;
  */
 class BlogPost extends Model
 {
+    use HasComments, HasTags;
+
     protected $fillable = [
         'slug', 'title', 'excerpt', 'body', 'markdown',
         'author', 'cover_image', 'published_at',

@@ -7,6 +7,7 @@ namespace Nikv\Blog;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
 use Nikv\Blog\Console\BlogInstallCommand;
+use Nikv\Blog\Http\Middleware\BlogSeoMiddleware;
 
 class BlogServiceProvider extends ServiceProvider
 {
@@ -42,7 +43,11 @@ class BlogServiceProvider extends ServiceProvider
 
     private function registerRoutes(): void
     {
-        Route::middleware('web')->group(__DIR__.'/../routes/blog.php');
+        $seoMiddleware = config('blog.seo') === 'artesaos' && config('blog.seo_ssr')
+            ? [BlogSeoMiddleware::class]
+            : [];
+
+        Route::middleware(['web', ...$seoMiddleware])->group(__DIR__.'/../routes/blog.php');
 
         $prefix     = config('blog.admin_prefix', 'admin');
         $middleware = (array) config('blog.admin_middleware', ['auth']);

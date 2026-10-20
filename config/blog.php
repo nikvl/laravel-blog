@@ -7,8 +7,11 @@ return [
     'image_disk' => env('BLOG_IMAGE_DISK', 'public'),
     'image_path' => 'blog-covers',
 
-    // null = feature off; required package must be installed separately
-    'tags'     => null, // null | 'spatie-tags'  (spatie/laravel-tags)
-    'comments' => null, // null | 'beyondcode'   (beyondcode/laravel-comments)
-    'seo'      => null, // null | 'artesaos'     (artesaos/seotools)
+    'tags'     => null, // null | 'spatie-tags'
+    'comments' => null, // null | 'beyondcode'
+    'comments_require_auth' => true,  // require auth to post comment
+    'comments_moderation'   => true,  // comments need approval before showing
+
+    'seo'     => null, // null | 'artesaos'
+    'seo_ssr' => false, // false = Inertia props → <Head>; true = middleware injects into <head>
 ];

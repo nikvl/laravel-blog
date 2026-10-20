@@ -15,6 +15,12 @@ interface Post {
     author: string | null;
     cover_image: string | null;
     published_at: string | null;
+    tags?: string[];
+}
+
+interface PageProps {
+    post: Post;
+    tagsEnabled?: boolean;
 }
 
 function extractTitle(md: string): string {
@@ -55,7 +61,7 @@ const toolbarBtnStyle = (active: boolean): React.CSSProperties => ({
     padding: '3px 9px',
 });
 
-export default function BlogEdit({ post }: { post: Post }) {
+export default function BlogEdit({ post, tagsEnabled }: PageProps) {
     const isNew = !post.id;
     const fileRef = useRef<HTMLInputElement>(null);
     const coverRef = useRef<HTMLInputElement>(null);
@@ -64,6 +70,7 @@ export default function BlogEdit({ post }: { post: Post }) {
     const [slug, setSlug]       = useState(post.slug ?? '');
     const [excerpt, setExcerpt] = useState(post.excerpt ?? '');
     const [author, setAuthor]   = useState(post.author ?? '');
+    const [tags, setTags]       = useState((post.tags ?? []).join(', '));
     const [slugEdited, setSlugEdited] = useState(!isNew);
 
     const editor = useEditor({
@@ -128,6 +135,7 @@ export default function BlogEdit({ post }: { post: Post }) {
         form.append('excerpt', excerpt);
         form.append('markdown', markdown);
         form.append('author', author);
+        if (tagsEnabled) form.append('tags', tags);
         if (coverRef.current?.files?.[0]) form.append('cover', coverRef.current.files[0]);
 
         if (isNew) {
@@ -179,6 +187,13 @@ export default function BlogEdit({ post }: { post: Post }) {
                             )}
                         </div>
                     </div>
+
+                    {tagsEnabled && (
+                        <div>
+                            <label style={labelStyle}>Теги (через запятую)</label>
+                            <input style={inputStyle} value={tags} onChange={e => setTags(e.target.value)} placeholder="laravel, php, tutorial" />
+                        </div>
+                    )}
 
                     <div>
                         <label style={labelStyle}>Краткое описание</label>

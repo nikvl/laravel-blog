@@ -24,7 +24,7 @@ class BlogSeoMiddleware
             return $response;
         }
 
-        $seoTags = app('seo')->generate(true);
+        $seoTags = app('seotools')->generate(true);
         $response->setContent(str_replace('</head>', $seoTags.'</head>', $content));
 
         return $response;

@@ -38,13 +38,14 @@ class BlogController extends Controller
 
         $seo = null;
         if (config('blog.seo') === 'artesaos') {
-            app('seo')->setTitle($post->title);
-            app('seo')->setDescription($post->excerpt ?? '');
-            app('seo')->opengraph()->setUrl(request()->url());
-            app('seo')->opengraph()->setTitle($post->title);
+            $seoTools = app('seotools');
+            $seoTools->setTitle($post->title);
+            $seoTools->setDescription($post->excerpt ?? '');
+            $seoTools->opengraph()->setUrl(request()->url());
+            $seoTools->opengraph()->setTitle($post->title);
             if ($post->cover_image) {
-                app('seo')->opengraph()->addImage($post->cover_image);
-                app('seo')->twitter()->addImage($post->cover_image);
+                $seoTools->opengraph()->addImage($post->cover_image);
+                $seoTools->twitter()->addImage($post->cover_image);
             }
 
             if (! config('blog.seo_ssr')) {

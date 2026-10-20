@@ -32,6 +32,14 @@ class BlogAdminController extends Controller
         return Inertia::render('Blog/Show', ['post' => $post, 'isPreview' => true]);
     }
 
+    public function create(): Response
+    {
+        return Inertia::render('Admin/BlogEdit', ['post' => [
+            'id' => null, 'slug' => '', 'title' => '', 'excerpt' => null,
+            'markdown' => null, 'author' => null, 'cover_image' => null, 'published_at' => null,
+        ]]);
+    }
+
     public function edit(int $id): Response
     {
         $post = BlogPost::findOrFail($id, ['id', 'slug', 'title', 'excerpt', 'markdown', 'author', 'cover_image', 'published_at']);

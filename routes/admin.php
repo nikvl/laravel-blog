@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use Nikv\Blog\Http\Controllers\Admin\BlogAdminController;
 
 Route::get('/', [BlogAdminController::class, 'index'])->name('blog');
+Route::get('/new', [BlogAdminController::class, 'create'])->name('blog.create');
 Route::get('/{id}/preview', [BlogAdminController::class, 'preview'])->name('blog.preview');
 Route::get('/{id}/edit', [BlogAdminController::class, 'edit'])->name('blog.edit');
 Route::post('/', [BlogAdminController::class, 'store'])->name('blog.store');

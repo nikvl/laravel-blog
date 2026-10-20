@@ -19,9 +19,24 @@ class BlogServiceProvider extends ServiceProvider
     {
         $this->registerRoutes();
         $this->registerPublishables();
+        $this->configureOptionalPackages();
 
         if ($this->app->runningInConsole()) {
             $this->commands([BlogInstallCommand::class]);
+        }
+    }
+
+    private function configureOptionalPackages(): void
+    {
+        if (config('blog.comments') === 'beyondcode') {
+            config(['comments.comment_class' => \Nikv\Blog\Models\BlogComment::class]);
+        }
+
+        if (config('blog.tags') === 'spatie-tags') {
+            config([
+                'tags.tag_model'             => \Nikv\Blog\Models\BlogTag::class,
+                'tags.taggable.table_name'   => 'blog_taggables',
+            ]);
         }
     }
 

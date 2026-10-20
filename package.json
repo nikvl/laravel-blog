@@ -1,0 +1,10 @@
+{
+    "name": "nikv/blog",
+    "description": "npm peer dependencies for nikv/blog Laravel package",
+    "dependencies": {
+        "@tiptap/extension-placeholder": "^2.0",
+        "@tiptap/react": "^2.0",
+        "@tiptap/starter-kit": "^2.0",
+        "tiptap-markdown": "^0.8"
+    }
+}

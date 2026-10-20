@@ -6,6 +6,7 @@ namespace Nikv\Blog;
 
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
+use Nikv\Blog\Console\BlogInstallCommand;
 
 class BlogServiceProvider extends ServiceProvider
 {
@@ -18,6 +19,10 @@ class BlogServiceProvider extends ServiceProvider
     {
         $this->registerRoutes();
         $this->registerPublishables();
+
+        if ($this->app->runningInConsole()) {
+            $this->commands([BlogInstallCommand::class]);
+        }
     }
 
     private function registerRoutes(): void

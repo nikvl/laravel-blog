@@ -1,5 +1,9 @@
 import { router } from '@inertiajs/react';
+import Placeholder from '@tiptap/extension-placeholder';
+import { EditorContent, useEditor } from '@tiptap/react';
+import StarterKit from '@tiptap/starter-kit';
 import { useRef, useState } from 'react';
+import { Markdown } from 'tiptap-markdown';
 import AppLayout from '../../Layouts/AppLayout';
 
 interface Post {
@@ -40,6 +44,17 @@ const inputStyle: React.CSSProperties = {
 
 const labelStyle: React.CSSProperties = { fontSize: 12, color: '#64748b', display: 'block', marginBottom: 6 };
 
+const toolbarBtnStyle = (active: boolean): React.CSSProperties => ({
+    background: active ? 'rgba(56,189,248,0.15)' : 'none',
+    border: '1px solid ' + (active ? 'rgba(56,189,248,0.4)' : 'rgba(255,255,255,0.1)'),
+    borderRadius: 6,
+    color: active ? '#38bdf8' : '#94a3b8',
+    cursor: 'pointer',
+    fontSize: 12,
+    fontWeight: 600,
+    padding: '3px 9px',
+});
+
 export default function BlogEdit({ post }: { post: Post }) {
     const isNew = !post.id;
     const fileRef = useRef<HTMLInputElement>(null);
@@ -48,9 +63,33 @@ export default function BlogEdit({ post }: { post: Post }) {
     const [title, setTitle]     = useState(post.title ?? '');
     const [slug, setSlug]       = useState(post.slug ?? '');
     const [excerpt, setExcerpt] = useState(post.excerpt ?? '');
-    const [markdown, setMarkdown] = useState(post.markdown ?? '');
     const [author, setAuthor]   = useState(post.author ?? '');
     const [slugEdited, setSlugEdited] = useState(!isNew);
+
+    const editor = useEditor({
+        extensions: [
+            StarterKit,
+            Markdown,
+            Placeholder.configure({ placeholder: 'Начните писать...' }),
+        ],
+        content: post.markdown ?? '',
+        editorProps: {
+            attributes: {
+                style: [
+                    'min-height:400px',
+                    'padding:14px 16px',
+                    'background:#0f1623',
+                    'border:1px solid rgba(255,255,255,0.1)',
+                    'border-top:none',
+                    'border-radius:0 0 8px 8px',
+                    'color:#f8fafc',
+                    'font-size:15px',
+                    'line-height:1.7',
+                    'outline:none',
+                ].join(';'),
+            },
+        },
+    });
 
     function handleTitleChange(val: string) {
         setTitle(val);
@@ -65,7 +104,7 @@ export default function BlogEdit({ post }: { post: Post }) {
             const md = ev.target?.result as string;
             const t = extractTitle(md);
             const ex = extractExcerpt(md);
-            setMarkdown(md);
+            editor?.commands.setContent(md);
             if (t) { setTitle(t); if (!slugEdited) setSlug(t.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')); }
             if (ex) setExcerpt(ex);
         };
@@ -75,6 +114,7 @@ export default function BlogEdit({ post }: { post: Post }) {
 
     function handleSubmit(e: React.FormEvent) {
         e.preventDefault();
+        const markdown = editor?.storage.markdown.getMarkdown() ?? '';
         const form = new FormData();
         form.append('title', title);
         form.append('slug', slug);
@@ -93,7 +133,7 @@ export default function BlogEdit({ post }: { post: Post }) {
 
     return (
         <AppLayout title={isNew ? 'Новая статья' : 'Редактировать статью'}>
-            <div style={{ maxWidth: 800, margin: '0 auto' }}>
+            <div style={{ maxWidth: 860, margin: '0 auto' }}>
                 <div style={{ marginBottom: 24, display: 'flex', alignItems: 'center', gap: 16 }}>
                     <h1 style={{ fontSize: 22, fontWeight: 700, color: '#f8fafc', margin: 0 }}>
                         {isNew ? 'Новая статья' : 'Редактировать статью'}
@@ -103,7 +143,7 @@ export default function BlogEdit({ post }: { post: Post }) {
                         onClick={() => fileRef.current?.click()}
                         style={{ fontSize: 12, color: '#38bdf8', background: 'none', border: '1px solid rgba(56,189,248,0.3)', borderRadius: 6, padding: '4px 12px', cursor: 'pointer' }}
                     >
-                        Импорт .txt
+                        Импорт .md
                     </button>
                     <input ref={fileRef} type="file" accept=".txt,.md" style={{ display: 'none' }} onChange={handleImport} />
                 </div>
@@ -139,8 +179,30 @@ export default function BlogEdit({ post }: { post: Post }) {
                     </div>
 
                     <div>
-                        <label style={labelStyle}>Текст (markdown) *</label>
-                        <textarea style={{ ...inputStyle, height: 400, resize: 'vertical', fontFamily: 'monospace', fontSize: 13 }} value={markdown} onChange={e => setMarkdown(e.target.value)} required />
+                        <label style={labelStyle}>Текст *</label>
+                        {editor && (
+                            <div style={{ border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8 }}>
+                                <div style={{ display: 'flex', gap: 4, padding: '8px 10px', borderBottom: '1px solid rgba(255,255,255,0.07)', flexWrap: 'wrap' }}>
+                                    <button type="button" style={toolbarBtnStyle(editor.isActive('bold'))} onClick={() => editor.chain().focus().toggleBold().run()}>B</button>
+                                    <button type="button" style={toolbarBtnStyle(editor.isActive('italic'))} onClick={() => editor.chain().focus().toggleItalic().run()}>I</button>
+                                    <button type="button" style={toolbarBtnStyle(editor.isActive('strike'))} onClick={() => editor.chain().focus().toggleStrike().run()}>S</button>
+                                    <button type="button" style={toolbarBtnStyle(editor.isActive('code'))} onClick={() => editor.chain().focus().toggleCode().run()}>{'<>'}</button>
+                                    <span style={{ width: 1, background: 'rgba(255,255,255,0.1)', margin: '2px 4px' }} />
+                                    <button type="button" style={toolbarBtnStyle(editor.isActive('heading', { level: 1 }))} onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}>H1</button>
+                                    <button type="button" style={toolbarBtnStyle(editor.isActive('heading', { level: 2 }))} onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}>H2</button>
+                                    <button type="button" style={toolbarBtnStyle(editor.isActive('heading', { level: 3 }))} onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}>H3</button>
+                                    <span style={{ width: 1, background: 'rgba(255,255,255,0.1)', margin: '2px 4px' }} />
+                                    <button type="button" style={toolbarBtnStyle(editor.isActive('bulletList'))} onClick={() => editor.chain().focus().toggleBulletList().run()}>• List</button>
+                                    <button type="button" style={toolbarBtnStyle(editor.isActive('orderedList'))} onClick={() => editor.chain().focus().toggleOrderedList().run()}>1. List</button>
+                                    <button type="button" style={toolbarBtnStyle(editor.isActive('blockquote'))} onClick={() => editor.chain().focus().toggleBlockquote().run()}>"</button>
+                                    <button type="button" style={toolbarBtnStyle(editor.isActive('codeBlock'))} onClick={() => editor.chain().focus().toggleCodeBlock().run()}>```</button>
+                                    <span style={{ width: 1, background: 'rgba(255,255,255,0.1)', margin: '2px 4px' }} />
+                                    <button type="button" style={toolbarBtnStyle(false)} onClick={() => editor.chain().focus().undo().run()}>↩</button>
+                                    <button type="button" style={toolbarBtnStyle(false)} onClick={() => editor.chain().focus().redo().run()}>↪</button>
+                                </div>
+                                <EditorContent editor={editor} />
+                            </div>
+                        )}
                     </div>
 
                     <div style={{ display: 'flex', gap: 12 }}>

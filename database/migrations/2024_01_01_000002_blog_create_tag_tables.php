@@ -8,6 +8,19 @@ return new class extends Migration
 {
     public function up(): void
     {
+        if (Schema::hasTable('blog_tags')) {
+            return;
+        }
+
+        if (Schema::hasTable('tags')) {
+            Schema::rename('tags', 'blog_tags');
+            if (Schema::hasTable('taggables')) {
+                Schema::rename('taggables', 'blog_taggables');
+            }
+
+            return;
+        }
+
         Schema::create('blog_tags', function (Blueprint $table) {
             $table->id();
             $table->json('name');

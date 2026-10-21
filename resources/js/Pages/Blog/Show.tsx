@@ -2,8 +2,15 @@ import { Head, router, usePage } from '@inertiajs/react';
 import { useState } from 'react';
 import AppLayout from '../../Layouts/AppLayout';
 
-interface Tag { name: string }
-interface Comment { id: number; comment: string; user_id: number | null; created_at: string }
+interface Tag {
+    name: string;
+}
+interface Comment {
+    id: number;
+    comment: string;
+    user_id: number | null;
+    created_at: string;
+}
 
 interface Post {
     slug: string;
@@ -54,13 +61,23 @@ export default function BlogShow({
         e.preventDefault();
         if (!comment.trim()) return;
         setSubmitting(true);
-        router.post(`/blog/${post.slug}/comments`, { comment }, {
-            onFinish: () => { setSubmitting(false); setComment(''); },
-        });
+        router.post(
+            `/blog/${post.slug}/comments`,
+            { comment },
+            {
+                onFinish: () => {
+                    setSubmitting(false);
+                    setComment('');
+                },
+            },
+        );
     }
 
     return (
-        <AppLayout title={seo?.title ?? `${post.title} — Блог`} {...(seo?.description ?? post.excerpt ? { description: seo?.description ?? post.excerpt ?? '' } : {})}>
+        <AppLayout
+            title={seo?.title ?? `${post.title} — Блог`}
+            {...((seo?.description ?? post.excerpt) ? { description: seo?.description ?? post.excerpt ?? '' } : {})}
+        >
             {seo && (
                 <Head>
                     <meta property="og:title" content={seo.title} />
@@ -73,26 +90,55 @@ export default function BlogShow({
             )}
 
             {isPreview && (
-                <div style={{ background: 'rgba(251,191,36,0.1)', border: '1px solid rgba(251,191,36,0.3)', borderRadius: 10, padding: '10px 16px', marginBottom: 24, fontSize: 13, color: '#fbbf24' }}>
+                <div
+                    style={{
+                        background: 'rgba(251,191,36,0.1)',
+                        border: '1px solid rgba(251,191,36,0.3)',
+                        borderRadius: 10,
+                        padding: '10px 16px',
+                        marginBottom: 24,
+                        fontSize: 13,
+                        color: '#fbbf24',
+                    }}
+                >
                     ⚠ Предпросмотр — статья ещё не опубликована
                 </div>
             )}
 
             <article className="mx-auto max-w-3xl">
                 {post.cover_image && (
-                    <img src={post.cover_image} alt={post.title} className="mb-8 w-full rounded-xl" style={{ maxHeight: '400px', objectFit: 'cover' }} />
+                    <img
+                        src={post.cover_image}
+                        alt={post.title}
+                        className="mb-8 w-full rounded-xl"
+                        style={{ maxHeight: '400px', objectFit: 'cover' }}
+                    />
                 )}
 
                 <header className="mb-8">
-                    <h1 className="mb-3 text-3xl font-bold" style={{ letterSpacing: '-0.02em' }}>{post.title}</h1>
+                    <h1 className="mb-3 text-3xl font-bold" style={{ letterSpacing: '-0.02em' }}>
+                        {post.title}
+                    </h1>
                     <div className="flex flex-wrap items-center gap-3 text-sm" style={{ color: '#64748b' }}>
-                        {post.published_at && <span>{post.published_at.slice(0, 10).split('-').reverse().join('.')}</span>}
+                        {post.published_at && (
+                            <span>{post.published_at.slice(0, 10).split('-').reverse().join('.')}</span>
+                        )}
                         {post.author && <span>· {post.author}</span>}
                     </div>
                     {post.tags && post.tags.length > 0 && (
                         <div className="mt-3 flex flex-wrap gap-2">
-                            {post.tags.map(tag => (
-                                <span key={tag.name} style={{ background: 'rgba(56,189,248,0.1)', border: '1px solid rgba(56,189,248,0.2)', borderRadius: 6, color: '#38bdf8', fontSize: 12, padding: '2px 10px' }}>
+                            {post.tags.map((tag) => (
+                                <span
+                                    key={tag.name}
+                                    style={{
+                                        background: 'rgba(56,189,248,0.1)',
+                                        border: '1px solid rgba(56,189,248,0.2)',
+                                        borderRadius: 6,
+                                        color: '#38bdf8',
+                                        fontSize: 12,
+                                        padding: '2px 10px',
+                                    }}
+                                >
                                     {tag.name}
                                 </span>
                             ))}
@@ -100,10 +146,16 @@ export default function BlogShow({
                     )}
                 </header>
 
-                <div className="prose prose-invert max-w-none text-sm leading-relaxed" style={{ color: '#cbd5e1' }} dangerouslySetInnerHTML={{ __html: post.body }} />
+                <div
+                    className="prose prose-invert max-w-none text-sm leading-relaxed"
+                    style={{ color: '#cbd5e1' }}
+                    dangerouslySetInnerHTML={{ __html: post.body }}
+                />
 
                 <div className="mt-12 border-t pt-6" style={{ borderColor: 'rgba(255,255,255,0.07)' }}>
-                    <a href="/blog" className="text-sm" style={{ color: '#38bdf8' }}>← Все статьи</a>
+                    <a href="/blog" className="text-sm" style={{ color: '#38bdf8' }}>
+                        ← Все статьи
+                    </a>
                 </div>
 
                 {commentsEnabled && (
@@ -112,37 +164,82 @@ export default function BlogShow({
 
                         {post.comments && post.comments.length > 0 ? (
                             <div className="flex flex-col gap-4 mb-8">
-                                {post.comments.map(c => (
-                                    <div key={c.id} style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 10, padding: '12px 16px' }}>
-                                        <p className="text-sm" style={{ color: '#cbd5e1' }}>{c.comment}</p>
-                                        <span className="text-xs mt-2 block" style={{ color: '#475569' }}>{c.created_at.slice(0, 10)}</span>
+                                {post.comments.map((c) => (
+                                    <div
+                                        key={c.id}
+                                        style={{
+                                            background: 'rgba(255,255,255,0.04)',
+                                            border: '1px solid rgba(255,255,255,0.07)',
+                                            borderRadius: 10,
+                                            padding: '12px 16px',
+                                        }}
+                                    >
+                                        <p className="text-sm" style={{ color: '#cbd5e1' }}>
+                                            {c.comment}
+                                        </p>
+                                        <span className="text-xs mt-2 block" style={{ color: '#475569' }}>
+                                            {c.created_at.slice(0, 10)}
+                                        </span>
                                     </div>
                                 ))}
                             </div>
                         ) : (
-                            <p className="mb-8 text-sm" style={{ color: '#475569' }}>Комментариев пока нет.</p>
+                            <p className="mb-8 text-sm" style={{ color: '#475569' }}>
+                                Комментариев пока нет.
+                            </p>
                         )}
 
                         {canComment ? (
                             <form onSubmit={submitComment} className="flex flex-col gap-3">
                                 <textarea
                                     value={comment}
-                                    onChange={e => setComment(e.target.value)}
+                                    onChange={(e) => setComment(e.target.value)}
                                     placeholder="Ваш комментарий..."
                                     rows={4}
                                     required
-                                    style={{ width: '100%', background: '#0f1623', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, padding: '10px 12px', color: '#f8fafc', fontSize: 14, resize: 'vertical', boxSizing: 'border-box' }}
+                                    style={{
+                                        width: '100%',
+                                        background: '#0f1623',
+                                        border: '1px solid rgba(255,255,255,0.1)',
+                                        borderRadius: 8,
+                                        padding: '10px 12px',
+                                        color: '#f8fafc',
+                                        fontSize: 14,
+                                        resize: 'vertical',
+                                        boxSizing: 'border-box',
+                                    }}
                                 />
                                 <div className="flex items-center gap-3">
-                                    <button type="submit" disabled={submitting} style={{ background: '#38bdf8', color: '#040914', border: 'none', borderRadius: 8, padding: '8px 20px', fontSize: 14, fontWeight: 600, cursor: submitting ? 'not-allowed' : 'pointer', opacity: submitting ? 0.7 : 1 }}>
+                                    <button
+                                        type="submit"
+                                        disabled={submitting}
+                                        style={{
+                                            background: '#38bdf8',
+                                            color: '#040914',
+                                            border: 'none',
+                                            borderRadius: 8,
+                                            padding: '8px 20px',
+                                            fontSize: 14,
+                                            fontWeight: 600,
+                                            cursor: submitting ? 'not-allowed' : 'pointer',
+                                            opacity: submitting ? 0.7 : 1,
+                                        }}
+                                    >
                                         Отправить
                                     </button>
-                                    {commentsModerationOn && <span className="text-xs" style={{ color: '#475569' }}>Комментарий появится после модерации</span>}
+                                    {commentsModerationOn && (
+                                        <span className="text-xs" style={{ color: '#475569' }}>
+                                            Комментарий появится после модерации
+                                        </span>
+                                    )}
                                 </div>
                             </form>
                         ) : commentsRequireAuth ? (
                             <p className="text-sm" style={{ color: '#475569' }}>
-                                <a href="/login" style={{ color: '#38bdf8' }}>Войдите</a>, чтобы оставить комментарий.
+                                <a href="/login" style={{ color: '#38bdf8' }}>
+                                    Войдите
+                                </a>
+                                , чтобы оставить комментарий.
                             </p>
                         ) : null}
                     </section>

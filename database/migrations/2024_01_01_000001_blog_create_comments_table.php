@@ -8,6 +8,16 @@ return new class extends Migration
 {
     public function up(): void
     {
+        if (Schema::hasTable('blog_comments')) {
+            return;
+        }
+
+        if (Schema::hasTable('comments')) {
+            Schema::rename('comments', 'blog_comments');
+
+            return;
+        }
+
         Schema::create('blog_comments', function (Blueprint $table) {
             $table->increments('id');
             $table->morphs('commentable');

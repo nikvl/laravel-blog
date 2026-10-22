@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Nikv\Blog\Http\Controllers;
 
 use Illuminate\Routing\Controller;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
 use Nikv\Blog\Models\BlogPost;
@@ -36,6 +37,18 @@ class BlogController extends Controller
 
         $post = $query->firstOrFail();
 
+        if (config('blog.analytics') === 'simple') {
+            try {
+                DB::table('blog_post_views')->insertOrIgnore([
+                    'post_id' => $post->id,
+                    'ip'      => request()->ip(),
+                    'date'    => now()->toDateString(),
+                ]);
+            } catch (\Illuminate\Database\QueryException) {
+                // analytics migration not yet run — degrade gracefully
+            }
+        }
+
         $seo = null;
         if (config('blog.seo') === 'artesaos') {
             $seoTools = app('seotools');
@@ -64,6 +77,7 @@ class BlogController extends Controller
             'commentsEnabled'      => config('blog.comments') === 'beyondcode',
             'commentsRequireAuth'  => config('blog.comments_require_auth'),
             'commentsModerationOn' => config('blog.comments_moderation'),
+            'analyticsEnabled'     => config('blog.analytics') === 'simple',
         ]);
     }
 }

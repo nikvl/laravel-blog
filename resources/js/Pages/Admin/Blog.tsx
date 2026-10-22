@@ -7,6 +7,8 @@ interface Post {
     title: string;
     published_at: string | null;
     created_at: string;
+    views_count?: number;
+    clicks_count?: number;
 }
 
 const card: React.CSSProperties = {
@@ -34,7 +36,7 @@ const btn = (color: string): React.CSSProperties => ({
 const link: React.CSSProperties = { fontSize: 12, color: '#38bdf8', textDecoration: 'none' };
 const muted: React.CSSProperties = { fontSize: 12, color: '#94a3b8', textDecoration: 'none' };
 
-export default function AdminBlog({ posts }: { posts: Post[] }) {
+export default function AdminBlog({ posts, analyticsEnabled }: { posts: Post[]; analyticsEnabled?: boolean }) {
     const publish = (id: number) => router.post(`/admin/blog/${id}/publish`);
     const unpublish = (id: number) => router.post(`/admin/blog/${id}/unpublish`);
     const destroy = (id: number) => {
@@ -75,6 +77,17 @@ export default function AdminBlog({ posts }: { posts: Post[] }) {
                         </div>
                         <div style={{ fontSize: 12, color: '#475569' }}>/{post.slug}</div>
                     </div>
+
+                    {analyticsEnabled && (
+                        <div style={{ display: 'flex', gap: 10, flexShrink: 0 }}>
+                            <span style={{ fontSize: 12, color: '#64748b' }}>
+                                👁 {post.views_count ?? 0}
+                            </span>
+                            <span style={{ fontSize: 12, color: '#64748b' }}>
+                                🔗 {post.clicks_count ?? 0}
+                            </span>
+                        </div>
+                    )}
 
                     <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0 }}>
                         <span

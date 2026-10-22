@@ -14,4 +14,7 @@ return [
 
     'seo'     => null, // null | 'artesaos'
     'seo_ssr' => false, // false = Inertia props → <Head>; true = middleware injects into <head>
+
+    'analytics' => null, // null | 'simple'  (view counter + link click tracking)
+    // NOTE: views are deduplicated by IP — configure TrustProxies in your app if running behind a reverse proxy
 ];

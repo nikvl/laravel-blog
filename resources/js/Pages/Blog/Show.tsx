@@ -1,5 +1,5 @@
 import { Head, router, usePage } from '@inertiajs/react';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import AppLayout from '../../Layouts/AppLayout';
 
 interface Tag {
@@ -13,6 +13,7 @@ interface Comment {
 }
 
 interface Post {
+    id: number;
     slug: string;
     title: string;
     excerpt: string | null;
@@ -43,6 +44,7 @@ export default function BlogShow({
     commentsEnabled,
     commentsRequireAuth,
     commentsModerationOn,
+    analyticsEnabled,
 }: {
     post: Post;
     isPreview?: boolean;
@@ -50,10 +52,31 @@ export default function BlogShow({
     commentsEnabled?: boolean;
     commentsRequireAuth?: boolean;
     commentsModerationOn?: boolean;
+    analyticsEnabled?: boolean;
 }) {
     const { auth } = usePage<SharedProps>().props;
     const [comment, setComment] = useState('');
     const [submitting, setSubmitting] = useState(false);
+    const bodyRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        if (!analyticsEnabled || isPreview || !bodyRef.current) return;
+        const el = bodyRef.current;
+        const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') ?? '';
+        const onClick = (e: MouseEvent) => {
+            const a = (e.target as HTMLElement).closest('a');
+            if (!a?.href) return;
+            navigator.sendBeacon(
+                '/blog/links/click',
+                new Blob(
+                    [JSON.stringify({ post_id: post.id, url: a.href, _token: token })],
+                    { type: 'application/json' },
+                ),
+            );
+        };
+        el.addEventListener('click', onClick);
+        return () => el.removeEventListener('click', onClick);
+    }, [post.id, analyticsEnabled, isPreview]);
 
     const canComment = commentsEnabled && (!commentsRequireAuth || auth?.user);
 
@@ -147,6 +170,7 @@ export default function BlogShow({
                 </header>
 
                 <div
+                    ref={bodyRef}
                     className="prose prose-invert max-w-none text-sm leading-relaxed"
                     style={{ color: '#cbd5e1' }}
                     dangerouslySetInnerHTML={{ __html: post.body }}

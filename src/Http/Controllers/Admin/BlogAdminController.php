@@ -7,6 +7,7 @@ namespace Nikv\Blog\Http\Controllers\Admin;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
@@ -18,16 +19,42 @@ class BlogAdminController extends Controller
 {
     public function index(): Response
     {
-        $posts = BlogPost::orderByDesc('created_at')
-            ->select(['id', 'slug', 'title', 'published_at', 'created_at'])
-            ->get();
+        $analyticsEnabled = config('blog.analytics') === 'simple';
 
-        return Inertia::render('Admin/Blog', ['posts' => $posts]);
+        $query = BlogPost::orderByDesc('created_at')
+            ->select(['id', 'slug', 'title', 'published_at', 'created_at']);
+
+        if ($analyticsEnabled) {
+            $query
+                ->selectSub(
+                    DB::table('blog_post_views')->whereColumn('post_id', 'blog_posts.id')->selectRaw('count(*)'),
+                    'views_count'
+                )
+                ->selectSub(
+                    DB::table('blog_post_link_clicks')->whereColumn('post_id', 'blog_posts.id')->selectRaw('count(*)'),
+                    'clicks_count'
+                );
+        }
+
+        try {
+            $posts = $query->get();
+        } catch (\Illuminate\Database\QueryException) {
+            // analytics migration not yet run — fall back to basic list
+            $posts = BlogPost::orderByDesc('created_at')
+                ->select(['id', 'slug', 'title', 'published_at', 'created_at'])
+                ->get();
+            $analyticsEnabled = false;
+        }
+
+        return Inertia::render('Admin/Blog', [
+            'posts'            => $posts,
+            'analyticsEnabled' => $analyticsEnabled,
+        ]);
     }
 
     public function preview(int $id): Response
     {
-        $post = BlogPost::findOrFail($id, ['slug', 'title', 'excerpt', 'body', 'author', 'cover_image', 'published_at']);
+        $post = BlogPost::findOrFail($id, ['id', 'slug', 'title', 'excerpt', 'body', 'author', 'cover_image', 'published_at']);
 
         return Inertia::render('Blog/Show', ['post' => $post, 'isPreview' => true]);
     }

@@ -23,7 +23,7 @@ return new class extends Migration
             $table->longText('markdown')->nullable();
             $table->string('author')->nullable();
             $table->string('cover_image')->nullable();
-            $table->timestamp('published_at')->nullable();
+            $table->timestamp('published_at')->nullable()->index();
             $table->timestamps();
         });
     }

@@ -23,6 +23,10 @@ interface PageProps {
     tagsEnabled?: boolean;
 }
 
+function toSlug(val: string): string {
+    return val.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+}
+
 function extractTitle(md: string): string {
     const m = md.match(/^#\s+(.+)$/m);
     return m ? (m[1] ?? '').trim() : '';
@@ -83,6 +87,7 @@ export default function BlogEdit({ post, tagsEnabled }: PageProps) {
     const [excerpt, setExcerpt] = useState(post.excerpt ?? '');
     const [author, setAuthor] = useState(post.author ?? '');
     const [tags, setTags] = useState((post.tags ?? []).join(', '));
+    const [submitting, setSubmitting] = useState(false);
     const [slugEdited, setSlugEdited] = useState(!isNew);
 
     const editor = useEditor({
@@ -115,13 +120,7 @@ export default function BlogEdit({ post, tagsEnabled }: PageProps) {
 
     function handleTitleChange(val: string) {
         setTitle(val);
-        if (!slugEdited)
-            setSlug(
-                val
-                    .toLowerCase()
-                    .replace(/\s+/g, '-')
-                    .replace(/[^a-z0-9-]/g, ''),
-            );
+        if (!slugEdited) setSlug(toSlug(val));
     }
 
     function handleImport(e: React.ChangeEvent<HTMLInputElement>) {
@@ -135,13 +134,7 @@ export default function BlogEdit({ post, tagsEnabled }: PageProps) {
             editor?.commands.setContent(md);
             if (t) {
                 setTitle(t);
-                if (!slugEdited)
-                    setSlug(
-                        t
-                            .toLowerCase()
-                            .replace(/\s+/g, '-')
-                            .replace(/[^a-z0-9-]/g, ''),
-                    );
+                if (!slugEdited) setSlug(toSlug(t));
             }
             if (ex) setExcerpt(ex);
         };
@@ -151,6 +144,7 @@ export default function BlogEdit({ post, tagsEnabled }: PageProps) {
 
     function handleSubmit(e: React.FormEvent) {
         e.preventDefault();
+        if (submitting) return;
         const editorStorage = editor?.storage as { markdown?: { getMarkdown: () => string } } | undefined;
         const markdown = editorStorage?.markdown?.getMarkdown() ?? '';
         const form = new FormData();
@@ -162,11 +156,14 @@ export default function BlogEdit({ post, tagsEnabled }: PageProps) {
         if (tagsEnabled) form.append('tags', tags);
         if (coverRef.current?.files?.[0]) form.append('cover', coverRef.current.files[0]);
 
+        setSubmitting(true);
+        const opts = { onFinish: () => setSubmitting(false) };
+
         if (isNew) {
-            router.post('/admin/blog', form);
+            router.post('/admin/blog', form, opts);
         } else {
             form.append('_method', 'PATCH');
-            router.post(`/admin/blog/${post.id}`, form);
+            router.post(`/admin/blog/${post.id}`, form, opts);
         }
     }
 
@@ -386,6 +383,7 @@ export default function BlogEdit({ post, tagsEnabled }: PageProps) {
                     <div style={{ display: 'flex', gap: 12 }}>
                         <button
                             type="submit"
+                            disabled={submitting}
                             style={{
                                 background: '#38bdf8',
                                 color: '#040914',
@@ -394,10 +392,11 @@ export default function BlogEdit({ post, tagsEnabled }: PageProps) {
                                 padding: '10px 24px',
                                 fontSize: 14,
                                 fontWeight: 600,
-                                cursor: 'pointer',
+                                cursor: submitting ? 'not-allowed' : 'pointer',
+                                opacity: submitting ? 0.7 : 1,
                             }}
                         >
-                            Сохранить
+                            {submitting ? 'Сохранение...' : 'Сохранить'}
                         </button>
                         <a
                             href="/admin/blog"

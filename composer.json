@@ -8,9 +8,11 @@
         "laravel/framework": "^11|^12",
         "league/commonmark": "^2",
         "inertiajs/inertia-laravel": "^2|^3",
-        "artesaos/seotools": "^1.4",
         "beyondcode/laravel-comments": "^1.9",
         "spatie/laravel-tags": "^4.12"
+    },
+    "suggest": {
+        "artesaos/seotools": "Required when blog.seo = 'artesaos'"
     },
     "autoload": {
         "psr-4": {

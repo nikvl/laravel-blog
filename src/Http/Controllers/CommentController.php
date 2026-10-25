@@ -14,10 +14,6 @@ class CommentController extends Controller
 {
     public function store(Request $request, string $slug): RedirectResponse
     {
-        if (config('blog.comments_require_auth') && ! auth()->check()) {
-            abort(401);
-        }
-
         $post = BlogPost::published()->where('slug', $slug)->firstOrFail();
 
         $data = $request->validate(['comment' => 'required|string|max:2000']);

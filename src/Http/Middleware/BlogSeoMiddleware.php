@@ -14,10 +14,6 @@ class BlogSeoMiddleware
     {
         $response = $next($request);
 
-        if (config('blog.seo') !== 'artesaos' || ! config('blog.seo_ssr')) {
-            return $response;
-        }
-
         $content = $response->getContent();
 
         if (! $content || ! str_contains($content, '</head>')) {

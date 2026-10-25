@@ -49,8 +49,8 @@ class BlogServiceProvider extends ServiceProvider
 
         Route::middleware(['web', ...$seoMiddleware])->group(__DIR__.'/../routes/blog.php');
 
-        $prefix     = config('blog.admin_prefix', 'admin');
-        $middleware = (array) config('blog.admin_middleware', ['auth']);
+        $prefix     = config('blog.admin_prefix');
+        $middleware = (array) config('blog.admin_middleware');
 
         Route::middleware(['web', ...$middleware])
             ->prefix($prefix.'/blog')

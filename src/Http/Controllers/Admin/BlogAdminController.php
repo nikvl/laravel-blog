@@ -102,7 +102,12 @@ class BlogAdminController extends Controller
         ]);
 
         $slug = $data['slug'] ?? Str::slug($data['title']);
-        $body = (new CommonMarkConverter)->convert($data['markdown'])->getContent();
+
+        if (empty($slug)) {
+            return back()->withErrors(['title' => 'Не удалось создать slug. Используйте латинские символы в заголовке.'])->withInput();
+        }
+
+        $body = $this->toHtml($data['markdown']);
 
         $post = BlogPost::create([
             'slug'        => $slug,
@@ -135,7 +140,7 @@ class BlogAdminController extends Controller
             'tags'     => 'nullable|string',
         ]);
 
-        $body = (new CommonMarkConverter)->convert($data['markdown'])->getContent();
+        $body = $this->toHtml($data['markdown']);
 
         $post->update([
             'title'       => $data['title'],
@@ -196,8 +201,21 @@ class BlogAdminController extends Controller
 
         $stored = $request->file('cover')->store($path, $disk);
 
-        return $disk === 'public'
-            ? Storage::disk($disk)->url((string) $stored)
-            : Storage::disk($disk)->temporaryUrl((string) $stored, now()->addYear());
+        if ($disk === 'public') {
+            return Storage::disk($disk)->url((string) $stored);
+        }
+
+        return rescue(
+            fn () => Storage::disk($disk)->temporaryUrl((string) $stored, now()->addYear()),
+            fn () => Storage::disk($disk)->url((string) $stored),
+        );
+    }
+
+    private function toHtml(string $markdown): string
+    {
+        return (new CommonMarkConverter([
+            'html_input'         => 'strip',
+            'allow_unsafe_links' => false,
+        ]))->convert($markdown)->getContent();
     }
 }

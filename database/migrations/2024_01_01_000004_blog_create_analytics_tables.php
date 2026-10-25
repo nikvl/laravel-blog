@@ -13,7 +13,7 @@ return new class extends Migration
         if (! Schema::hasTable('blog_post_views')) {
             Schema::create('blog_post_views', function (Blueprint $table) {
                 $table->id();
-                $table->unsignedBigInteger('post_id');
+                $table->foreignId('post_id')->constrained('blog_posts')->cascadeOnDelete();
                 $table->string('ip', 45);
                 $table->date('date');
                 $table->unique(['post_id', 'ip', 'date']);
@@ -23,7 +23,7 @@ return new class extends Migration
         if (! Schema::hasTable('blog_post_link_clicks')) {
             Schema::create('blog_post_link_clicks', function (Blueprint $table) {
                 $table->id();
-                $table->unsignedBigInteger('post_id');
+                $table->foreignId('post_id')->constrained('blog_posts')->cascadeOnDelete();
                 $table->string('ip', 45);
                 $table->text('url');
                 $table->char('url_hash', 64);

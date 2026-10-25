@@ -82,7 +82,7 @@ export default function BlogShow({
 
     function submitComment(e: React.FormEvent) {
         e.preventDefault();
-        if (!comment.trim()) return;
+        if (!comment.trim() || submitting) return;
         setSubmitting(true);
         router.post(
             `/blog/${post.slug}/comments`,

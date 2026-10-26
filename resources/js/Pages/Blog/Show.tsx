@@ -1,6 +1,6 @@
 import { Head, router, usePage } from '@inertiajs/react';
 import { useEffect, useRef, useState } from 'react';
-import AppLayout from '../../Layouts/AppLayout';
+import AppLayout from '@/Layouts/AppLayout';
 
 interface Tag {
     name: string;

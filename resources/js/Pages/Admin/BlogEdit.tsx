@@ -4,7 +4,7 @@ import { EditorContent, useEditor, useEditorState } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import { useRef, useState } from 'react';
 import { Markdown } from 'tiptap-markdown';
-import AppLayout from '../../Layouts/AppLayout';
+import AppLayout from '@/Layouts/AppLayout';
 
 interface Post {
     id: number;

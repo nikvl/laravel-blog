@@ -1,6 +1,8 @@
 import { Head, router, usePage } from '@inertiajs/react';
 import { useEffect, useRef, useState } from 'react';
 import AppLayout from '@/Layouts/AppLayout';
+import { autoSizePreview } from '../BlogPreviewFrame';
+import { previewDocument } from '../Admin/blogMedia';
 
 interface Tag {
     name: string;
@@ -58,6 +60,16 @@ export default function BlogShow({
     const [comment, setComment] = useState('');
     const [submitting, setSubmitting] = useState(false);
     const bodyRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        const frames = bodyRef.current?.querySelectorAll<HTMLIFrameElement>('iframe[sandbox][srcdoc]') ?? [];
+        const cleanups = Array.from(frames, frame => {
+            frame.setAttribute('sandbox', 'allow-same-origin');
+            frame.srcdoc = previewDocument(frame.srcdoc);
+            return autoSizePreview(frame);
+        });
+        return () => cleanups.forEach(cleanup => cleanup());
+    }, [post.body]);
 
     useEffect(() => {
         if (!analyticsEnabled || isPreview || !bodyRef.current) return;

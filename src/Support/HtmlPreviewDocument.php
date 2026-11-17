@@ -33,6 +33,14 @@ final class HtmlPreviewDocument
                 continue;
             }
 
+            if ($name === 'svg' && ! $element->hasAttribute('width') && ! $element->hasAttribute('height')) {
+                $box = preg_split('/[\s,]+/', trim($element->getAttribute('viewbox')));
+                if (count($box) === 4 && count(array_filter($box, 'is_numeric')) === 4 && (float) $box[2] > 0 && (float) $box[3] > 0) {
+                    $element->setAttribute('width', $box[2]);
+                    $element->setAttribute('height', $box[3]);
+                }
+            }
+
             if (in_array($name, ['a', 'area'], true)) {
                 $element->removeAttribute('href');
                 $element->removeAttribute('xlink:href');
@@ -55,7 +63,7 @@ final class HtmlPreviewDocument
         $charset->setAttribute('charset', 'UTF-8');
         $head->appendChild($charset);
         $style = $document->createElement('style');
-        $style->textContent = 'html{color-scheme:light;background:#fff;color:#0f172a}body{margin:16px;overflow-wrap:anywhere}img,svg{max-width:100%;height:auto}*{box-sizing:border-box}';
+        $style->textContent = 'html{color-scheme:light;background:transparent;color:#0f172a}body{margin:0;display:flow-root;width:fit-content;max-width:100%;overflow-wrap:anywhere}img,svg{max-width:100%;height:auto;vertical-align:top}*{box-sizing:border-box}';
         $head->appendChild($style);
 
         return '<!doctype html>'.$document->saveHTML($document->documentElement);

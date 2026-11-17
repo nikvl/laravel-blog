@@ -12,6 +12,15 @@ export function previewDocument(source: string): string {
         element.removeAttribute('target');
     }
 
+    for (const svg of document.querySelectorAll('svg[viewBox]')) {
+        if (svg.hasAttribute('width') || svg.hasAttribute('height')) continue;
+        const box = svg.getAttribute('viewBox')!.trim().split(/[\s,]+/).map(Number);
+        if (box.length === 4 && box.every(Number.isFinite) && box[2] > 0 && box[3] > 0) {
+            svg.setAttribute('width', String(box[2]));
+            svg.setAttribute('height', String(box[3]));
+        }
+    }
+
     const policy = document.createElement('meta');
     policy.httpEquiv = 'Content-Security-Policy';
     policy.content = previewCsp;
@@ -20,7 +29,7 @@ export function previewDocument(source: string): string {
     charset.setAttribute('charset', 'UTF-8');
     document.head.append(charset);
     const style = document.createElement('style');
-    style.textContent = 'html{color-scheme:light;background:#fff;color:#0f172a}body{margin:16px;overflow-wrap:anywhere}img,svg{max-width:100%;height:auto}*{box-sizing:border-box}';
+    style.textContent = 'html{color-scheme:light;background:transparent;color:#0f172a}body{margin:0;display:flow-root;width:fit-content;max-width:100%;overflow-wrap:anywhere}img,svg{max-width:100%;height:auto;vertical-align:top}*{box-sizing:border-box}';
     document.head.append(style);
 
     return '<!doctype html>' + document.documentElement.outerHTML;

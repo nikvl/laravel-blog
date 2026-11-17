@@ -24,11 +24,12 @@ final class HtmlPreviewRenderer implements NodeRendererInterface
 
         return new HtmlElement('iframe', [
             'srcdoc' => HtmlPreviewDocument::make($node->getLiteral()),
-            'sandbox' => '',
+            'sandbox' => 'allow-same-origin',
             'referrerpolicy' => 'no-referrer',
             'loading' => 'lazy',
             'title' => 'HTML / SVG',
-            'style' => 'display:block;width:100%;height:480px;border:1px solid #cbd5e1;border-radius:8px;background:#fff;',
+            'data-html-preview' => '',
+            'style' => 'display:block;width:100%;height:0;max-width:100%;border:0;background:transparent;',
         ], '');
     }
 }

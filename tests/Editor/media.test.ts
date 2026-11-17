@@ -1,7 +1,8 @@
 import { Editor } from '@tiptap/core';
 import StarterKit from '@tiptap/starter-kit';
 import { Markdown } from 'tiptap-markdown';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import { autoSizePreview } from '../../resources/js/Pages/BlogPreviewFrame';
 import { BlogImage, PreviewCodeBlock } from '../../resources/js/Pages/Admin/BlogMediaExtensions';
 import { isImageUrl, previewCsp, previewDocument } from '../../resources/js/Pages/Admin/blogMedia';
 
@@ -69,7 +70,64 @@ describe('media Markdown round-trip', () => {
     });
 });
 
+describe('preview sizing', () => {
+    it('fits the content, responds to container width changes and disconnects on cleanup', () => {
+        const callbacks: ResizeObserverCallback[] = [];
+        const observers: { observe: ReturnType<typeof vi.fn>; disconnect: ReturnType<typeof vi.fn> }[] = [];
+        vi.stubGlobal('ResizeObserver', class {
+            observe = vi.fn();
+            disconnect = vi.fn();
+            constructor(callback: ResizeObserverCallback) { callbacks.push(callback); observers.push(this); }
+        });
+        vi.stubGlobal('requestAnimationFrame', (callback: FrameRequestCallback) => { callback(0); return 1; });
+        vi.stubGlobal('cancelAnimationFrame', vi.fn());
+        const parent = document.createElement('div');
+        const frame = document.createElement('iframe');
+        document.body.append(parent);
+        parent.append(frame);
+        let parentWidth = 600;
+        Object.defineProperty(parent, 'clientWidth', { get: () => parentWidth });
+        const body = frame.contentDocument!.body;
+        vi.spyOn(body, 'getBoundingClientRect').mockImplementation(() => ({ left: 0, top: 0, right: Math.min(240, parentWidth), bottom: 90 }) as DOMRect);
+        const cleanup = autoSizePreview(frame);
+        try {
+            expect(frame.style.width).toBe('240px');
+            expect(frame.style.height).toBe('90px');
+            expect(frame.style.background).toBe('transparent');
+            parentWidth = 180;
+            callbacks[0]([{ contentRect: { width: 180 } } as ResizeObserverEntry], observers[0] as unknown as ResizeObserver);
+            expect(frame.style.width).toBe('180px');
+            cleanup();
+            expect(observers.every(observer => observer.disconnect.mock.calls.length > 0)).toBe(true);
+            const observerCount = observers.length;
+            frame.dispatchEvent(new Event('load'));
+            expect(observers).toHaveLength(observerCount);
+        } finally {
+            cleanup();
+            parent.remove();
+            vi.restoreAllMocks();
+            vi.unstubAllGlobals();
+        }
+    });
+});
+
 describe('preview isolation', () => {
+    it('uses transparent, content-sized defaults without injected padding', () => {
+        const html = previewDocument('<svg width="120" height="60"></svg>');
+        expect(html).toContain('background:transparent');
+        expect(html).toContain('margin:0');
+        expect(html).toContain('width:fit-content');
+        expect(html).not.toContain('background:#fff');
+    });
+    it('uses the viewBox as the intrinsic SVG size without replacing explicit dimensions', () => {
+        const html = new DOMParser().parseFromString(previewDocument('<svg viewBox="0 0 400 200"></svg><svg width="90" viewBox="0 0 400 200"></svg>'), 'text/html');
+        const svgs = html.querySelectorAll('svg');
+        expect(svgs[0].getAttribute('width')).toBe('400');
+        expect(svgs[0].getAttribute('height')).toBe('200');
+        expect(svgs[1].getAttribute('width')).toBe('90');
+        expect(svgs[1].hasAttribute('height')).toBe(false);
+    });
+
     it('removes navigation and active elements while preserving SVG and CSS', () => {
         const html = previewDocument('<meta http-equiv="refresh" content="0;url=https://example.com"><a href="https://example.com">Link</a><script>alert(1)</script><style>p{color:red}</style><svg><circle r="10"/><animate attributeName="href"/></svg>');
         expect(html).toContain(previewCsp);

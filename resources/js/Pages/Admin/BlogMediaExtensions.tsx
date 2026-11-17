@@ -6,6 +6,7 @@ import { defaultMarkdownSerializer, type MarkdownSerializerState } from '@tiptap
 import type { Node as ProseMirrorNode } from '@tiptap/pm/model';
 import { NodeViewContent, NodeViewWrapper, ReactNodeViewRenderer, type NodeViewProps } from '@tiptap/react';
 import { useMemo } from 'react';
+import BlogPreviewFrame from '../BlogPreviewFrame';
 import { isImageUrl, previewDocument } from './blogMedia';
 
 type PreviewOptions = CodeBlockOptions & {
@@ -44,7 +45,7 @@ function CodeBlockView({ node, extension, getPos, selected, deleteNode, editor }
                 </div>
             </div>
             <div contentEditable={false}>
-                <iframe title="HTML / SVG" srcDoc={source} sandbox="" referrerPolicy="no-referrer" style={{ display: 'block', width: '100%', height: 480, border: 0, background: '#fff' }} />
+                <BlogPreviewFrame source={source} />
             </div>
             <NodeViewContent as="code" style={{ display: 'none' }} />
         </NodeViewWrapper>

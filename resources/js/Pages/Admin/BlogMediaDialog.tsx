@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { isImageUrl, previewDocument } from './blogMedia';
+import BlogPreviewFrame from '../BlogPreviewFrame';
 
 export type MediaInsert = { kind: 'image'; src: string; alt: string } | { kind: 'code'; source: string };
 
@@ -120,7 +121,7 @@ export default function BlogMediaDialog({ kind, initialSource, uploadUrl, onInse
                     <label htmlFor="blog-media-source" style={{ fontSize: 12, color: '#94a3b8' }}>Исходный код</label>
                     <textarea id="blog-media-source" autoFocus value={source} onChange={event => setSource(event.target.value)} spellCheck={false} placeholder={'<svg viewBox="0 0 400 200">…</svg>'} style={{ ...fieldStyle, height: 220, resize: 'vertical', fontFamily: 'monospace', lineHeight: 1.5 }} />
                     <span style={{ fontSize: 12, color: '#94a3b8' }}>Предпросмотр</span>
-                    <iframe title="Предпросмотр SVG / HTML" srcDoc={preview} sandbox="" referrerPolicy="no-referrer" style={{ width: '100%', height: 300, border: '1px solid #334155', borderRadius: 6, background: '#fff' }} />
+                    <BlogPreviewFrame title="Предпросмотр SVG / HTML" source={preview} />
                 </div>
             )}
             {error && <p role="alert" style={{ fontSize: 13, color: '#fca5a5', marginBottom: 0 }}>{error}</p>}

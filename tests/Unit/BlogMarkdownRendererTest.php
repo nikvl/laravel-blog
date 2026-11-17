@@ -29,7 +29,9 @@ final class BlogMarkdownRendererTest extends TestCase
 
         self::assertCount(1, $frames);
         self::assertTrue($frames->item(0)->hasAttribute('sandbox'));
-        self::assertSame('', $frames->item(0)->getAttribute('sandbox'));
+        self::assertSame('allow-same-origin', $frames->item(0)->getAttribute('sandbox'));
+        self::assertStringContainsString('background:transparent', $frames->item(0)->getAttribute('style'));
+        self::assertStringNotContainsString('480px', $frames->item(0)->getAttribute('style'));
         self::assertSame('no-referrer', $frames->item(0)->getAttribute('referrerpolicy'));
         self::assertStringContainsString(HtmlPreviewDocument::CSP, $frames->item(0)->getAttribute('srcdoc'));
         self::assertStringContainsString('&lt;b&gt;Code&lt;/b&gt;', $html);
@@ -63,6 +65,30 @@ final class BlogMarkdownRendererTest extends TestCase
         self::assertStringContainsString('style="padding:32px"', $html);
         self::assertStringContainsString('.card{color:red}', $html);
         self::assertStringContainsString('Привет &amp; мир', $html);
+    }
+
+    public function test_preview_defaults_are_transparent_and_fit_content(): void
+    {
+        $html = HtmlPreviewDocument::make('<svg width="120" height="60"><rect width="120" height="60"/></svg>');
+
+        self::assertStringContainsString('background:transparent', $html);
+        self::assertStringContainsString('margin:0', $html);
+        self::assertStringContainsString('width:fit-content', $html);
+        self::assertStringNotContainsString('background:#fff', $html);
+        self::assertStringContainsString("script-src 'none'", $html);
+    }
+
+    public function test_it_uses_viewbox_dimensions_without_replacing_explicit_svg_sizes(): void
+    {
+        $html = HtmlPreviewDocument::make('<svg viewBox="0 0 400 200"></svg><svg width="90" viewBox="0 0 400 200"></svg>');
+        $document = new DOMDocument();
+        @$document->loadHTML($html);
+        $svgs = $document->getElementsByTagName('svg');
+
+        self::assertSame('400', $svgs->item(0)->getAttribute('width'));
+        self::assertSame('200', $svgs->item(0)->getAttribute('height'));
+        self::assertSame('90', $svgs->item(1)->getAttribute('width'));
+        self::assertFalse($svgs->item(1)->hasAttribute('height'));
     }
 
     public function test_an_empty_preview_is_a_valid_document(): void

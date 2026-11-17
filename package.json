@@ -1,7 +1,23 @@
 {
     "name": "nikv/blog",
     "description": "npm peer dependencies for nikv/blog Laravel package",
+    "scripts": {
+        "test": "vitest run"
+    },
+    "devDependencies": {
+        "@types/react": "^18.3",
+        "@types/react-dom": "^18.3",
+        "jsdom": "^26.0",
+        "react": "^18.3",
+        "react-dom": "^18.3",
+        "typescript": "^5.0",
+        "vitest": "^3.2"
+    },
     "dependencies": {
+        "@tiptap/core": "^2.0",
+        "@tiptap/pm": "^2.0",
+        "@tiptap/extension-code-block": "^2.0",
+        "@tiptap/extension-image": "^2.0",
         "@tiptap/extension-placeholder": "^2.0",
         "@tiptap/react": "^2.0",
         "@tiptap/starter-kit": "^2.0",

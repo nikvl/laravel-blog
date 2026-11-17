@@ -5,11 +5,24 @@
     "license": "MIT",
     "require": {
         "php": "^8.2",
+        "ext-dom": "*",
         "laravel/framework": "^11|^12",
         "league/commonmark": "^2",
         "inertiajs/inertia-laravel": "^2|^3",
         "beyondcode/laravel-comments": "^1.9",
         "spatie/laravel-tags": "^4.12"
+    },
+    "require-dev": {
+        "orchestra/testbench": "^9.0|^10.0",
+        "phpunit/phpunit": "^10.5|^11.0"
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Nikv\\Blog\\Tests\\": "tests/"
+        }
+    },
+    "scripts": {
+        "test": "phpunit"
     },
     "suggest": {
         "artesaos/seotools": "Required when blog.seo = 'artesaos'"

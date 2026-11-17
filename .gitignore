@@ -1,3 +1,6 @@
 /vendor/
+/node_modules/
+.phpunit.cache/
+/test-results/
 .DS_Store
 .idea

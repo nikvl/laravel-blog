@@ -1,10 +1,13 @@
 import { router } from '@inertiajs/react';
 import Placeholder from '@tiptap/extension-placeholder';
+import { closeHistory } from '@tiptap/pm/history';
 import { EditorContent, useEditor, useEditorState } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import { useRef, useState } from 'react';
 import { Markdown } from 'tiptap-markdown';
 import AppLayout from '@/Layouts/AppLayout';
+import BlogMediaDialog, { type MediaInsert } from './BlogMediaDialog';
+import { BlogImage, PreviewCodeBlock } from './BlogMediaExtensions';
 
 interface Post {
     id: number;
@@ -21,6 +24,14 @@ interface Post {
 interface PageProps {
     post: Post;
     tagsEnabled?: boolean;
+    imageUploadUrl: string;
+}
+
+interface MediaDialogState {
+    kind: 'image' | 'code';
+    from: number;
+    to: number;
+    source: string;
 }
 
 function toSlug(val: string): string {
@@ -77,7 +88,7 @@ const toolbarBtnStyle = (active: boolean): React.CSSProperties => ({
     padding: '3px 9px',
 });
 
-export default function BlogEdit({ post, tagsEnabled }: PageProps) {
+export default function BlogEdit({ post, tagsEnabled, imageUploadUrl }: PageProps) {
     const isNew = !post.id;
     const fileRef = useRef<HTMLInputElement>(null);
     const coverRef = useRef<HTMLInputElement>(null);
@@ -89,9 +100,19 @@ export default function BlogEdit({ post, tagsEnabled }: PageProps) {
     const [tags, setTags] = useState((post.tags ?? []).join(', '));
     const [submitting, setSubmitting] = useState(false);
     const [slugEdited, setSlugEdited] = useState(!isNew);
+    const [mediaDialog, setMediaDialog] = useState<MediaDialogState | null>(null);
+    const [uploading, setUploading] = useState(false);
 
     const editor = useEditor({
-        extensions: [StarterKit, Markdown, Placeholder.configure({ placeholder: 'Начните писать...' })],
+        extensions: [
+            StarterKit.configure({ codeBlock: false }),
+            PreviewCodeBlock.configure({
+                onEditPreview: (position, source) => setMediaDialog({ kind: 'code', from: position, to: position + source.length + 2, source }),
+            }),
+            BlogImage,
+            Markdown,
+            Placeholder.configure({ placeholder: 'Начните писать...' }),
+        ],
         content: post.markdown ?? '',
         editorProps: {
             attributes: {
@@ -142,9 +163,25 @@ export default function BlogEdit({ post, tagsEnabled }: PageProps) {
         e.target.value = '';
     }
 
+    function openMedia(kind: 'image' | 'code') {
+        if (!editor) return;
+        const { from, to } = editor.state.selection;
+        setMediaDialog({ kind, from, to, source: '' });
+    }
+
+    function insertMedia(media: MediaInsert) {
+        if (!editor || !mediaDialog) return;
+        const content = media.kind === 'image'
+            ? { type: 'image', attrs: { src: media.src, alt: media.alt } }
+            : { type: 'codeBlock', attrs: { language: 'html-preview' }, content: [{ type: 'text', text: media.source }] };
+        editor.view.dispatch(closeHistory(editor.state.tr));
+        editor.chain().focus().insertContentAt({ from: mediaDialog.from, to: mediaDialog.to }, content).run();
+        setMediaDialog(null);
+    }
+
     function handleSubmit(e: React.FormEvent) {
         e.preventDefault();
-        if (submitting) return;
+        if (submitting || uploading || mediaDialog) return;
         const editorStorage = editor?.storage as { markdown?: { getMarkdown: () => string } } | undefined;
         const markdown = editorStorage?.markdown?.getMarkdown() ?? '';
         const form = new FormData();
@@ -363,6 +400,22 @@ export default function BlogEdit({ post, tagsEnabled }: PageProps) {
                                     <button
                                         type="button"
                                         style={toolbarBtnStyle(false)}
+                                        onMouseDown={event => event.preventDefault()}
+                                        onClick={() => openMedia('image')}
+                                    >
+                                        Изображение
+                                    </button>
+                                    <button
+                                        type="button"
+                                        style={toolbarBtnStyle(false)}
+                                        onMouseDown={event => event.preventDefault()}
+                                        onClick={() => openMedia('code')}
+                                    >
+                                        SVG / HTML
+                                    </button>
+                                    <button
+                                        type="button"
+                                        style={toolbarBtnStyle(false)}
                                         onClick={() => editor.chain().focus().undo().run()}
                                     >
                                         ↩
@@ -383,7 +436,7 @@ export default function BlogEdit({ post, tagsEnabled }: PageProps) {
                     <div style={{ display: 'flex', gap: 12 }}>
                         <button
                             type="submit"
-                            disabled={submitting}
+                            disabled={submitting || uploading}
                             style={{
                                 background: '#38bdf8',
                                 color: '#040914',
@@ -406,6 +459,16 @@ export default function BlogEdit({ post, tagsEnabled }: PageProps) {
                         </a>
                     </div>
                 </form>
+                {mediaDialog && (
+                    <BlogMediaDialog
+                        kind={mediaDialog.kind}
+                        initialSource={mediaDialog.source}
+                        uploadUrl={imageUploadUrl}
+                        onInsert={insertMedia}
+                        onClose={() => { setMediaDialog(null); editor?.commands.focus(); }}
+                        onBusy={setUploading}
+                    />
+                )}
             </div>
         </AppLayout>
     );

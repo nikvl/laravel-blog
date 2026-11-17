@@ -2,6 +2,9 @@
 
 use Illuminate\Support\Facades\Route;
 use Nikv\Blog\Http\Controllers\Admin\BlogAdminController;
+use Nikv\Blog\Http\Controllers\Admin\BlogImageController;
+
+Route::post('/images', [BlogImageController::class, 'store'])->name('blog.images.store');
 
 Route::get('/', [BlogAdminController::class, 'index'])->name('blog');
 Route::get('/new', [BlogAdminController::class, 'create'])->name('blog.create');

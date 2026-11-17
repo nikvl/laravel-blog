@@ -171,7 +171,7 @@ export default function BlogShow({
 
                 <div
                     ref={bodyRef}
-                    className="prose prose-invert max-w-none text-sm leading-relaxed"
+                    className="prose prose-invert max-w-none text-sm leading-relaxed [&_img]:max-w-full [&_img]:h-auto [&_img]:rounded-lg [&_iframe]:max-w-full"
                     style={{ color: '#cbd5e1' }}
                     dangerouslySetInnerHTML={{ __html: post.body }}
                 />

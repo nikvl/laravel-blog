@@ -12,8 +12,8 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
-use League\CommonMark\CommonMarkConverter;
 use Nikv\Blog\Models\BlogPost;
+use Nikv\Blog\Support\BlogMarkdownRenderer;
 
 class BlogAdminController extends Controller
 {
@@ -68,6 +68,7 @@ class BlogAdminController extends Controller
                 'tags' => [],
             ],
             'tagsEnabled' => config('blog.tags') === 'spatie-tags',
+            'imageUploadUrl' => route(config('blog.admin_prefix').'.blog.images.store'),
         ]);
     }
 
@@ -86,6 +87,7 @@ class BlogAdminController extends Controller
         return Inertia::render('Admin/BlogEdit', [
             'post'        => $data,
             'tagsEnabled' => config('blog.tags') === 'spatie-tags',
+            'imageUploadUrl' => route(config('blog.admin_prefix').'.blog.images.store'),
         ]);
     }
 
@@ -213,9 +215,6 @@ class BlogAdminController extends Controller
 
     private function toHtml(string $markdown): string
     {
-        return (new CommonMarkConverter([
-            'html_input'         => 'strip',
-            'allow_unsafe_links' => false,
-        ]))->convert($markdown)->getContent();
+        return (new BlogMarkdownRenderer())->render($markdown);
     }
 }
